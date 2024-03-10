@@ -1,0 +1,28 @@
+# Create AKS Cluster
+
+az aks create - $AZURE_RESOURCE_GROUP -n $AZURE_CLUSTER_NAME --generate-ssh-keys \
+            --node-vm-size standard_d4s_v5 \
+            --max-pods=250 \
+            --os-sku Azurelinux \
+            --enable-azure-monitor-metrics \
+            --azure-monitor-workspace-resource-id $azuremonitorid \
+            --grafana-resource-id $grafanald \
+            --attach-acr /subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AZURE_ACR_RESOURCE_GROUP/providers/Microsoft.ContainerRegistry/registris
+            --min-count 1 \
+            --max-count 3 \
+            --enable-cluster-autoscaler \
+            --cluster-autoscaler-profile scale-down-delay-after-add=3m, scale-down-unneeded-time=3m
+
+# Create ARM64 node pool
+
+az aks nodepool add \
+    --resource-group $AZURE_RESOURCE_GROUP \
+    --cluster-name $AZURE_CLUSTER_NAME \
+    -name arspool \
+    --enable-cluster-autoscaler \
+    -min-count 0 \
+    --max-count 3 \
+    --os-sku Azurelinux \
+    --node-taints arch=arm64:NoSchedule \
+    --scale-down-mode Deallocate \
+    --node-vm-size Standard_D2pls_v5
